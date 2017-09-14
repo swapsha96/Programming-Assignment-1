@@ -75,14 +75,11 @@ def calculate_sigma_sq(cov):
 
     return (sum(avg_sigma) / len(avg_sigma))
 
-def calculate_w(m1, m2, var, p1, p2):
-    w1 = divide_matrix_by_x(m1, var)
-    w2 = divide_matrix_by_x(m2, var)
+def calculate_w(mi, var, pi):
+    wi = divide_matrix_by_x(mi, var)
+    wi0 = math.log(pi) - (multiply_matrices(transpose(mi), mi)[0][0] / (2 * var))
 
-    w10 = math.log(p1) - (multiply_matrices(transpose(m1), m1)[0][0] / (2 * var))
-    w20 = math.log(p2) - (multiply_matrices(transpose(m2), m2)[0][0] / (2 * var))
-
-    return w1, w2, w10, w20
+    return wi, wi0
 
 def generate_summary_from_classes(filenames):
     all_datasets, all_training_sets, all_test_sets, all_means, all_covariance_matrices, all_probabilities = [], [], [], [], [], []
@@ -111,10 +108,12 @@ def generate_summary_from_classes(filenames):
 
     return all_datasets, all_training_sets, all_test_sets, all_means, all_covariance_matrices, all_probabilities
 
-def gx(w1, w2, w10, w20, x):
-    g1x = multiply_matrices(transpose(w1), x)[0][0] + w10
-    g2x = multiply_matrices(transpose(w2), x)[0][0] + w20
+def calculate_gix(wi, wi0, x):
+    return multiply_matrices(transpose(wi), x)[0][0] + wi0
 
+def gx(w1, w2, w10, w20, x):
+    g1x = calculate_gix(w1, w10, x)
+    g2x = calculate_gix(w2, w20, x)
     return (g1x - g2x)
 
 def get_graph_boundary(dataset):
@@ -170,7 +169,8 @@ if __name__ == '__main__':
     all_datasets, all_training_sets, all_test_sets, all_means, all_covariance_matrices, all_probabilities = generate_summary_from_classes(names)
 
     sigma_sq = calculate_sigma_sq(all_covariance_matrices)
-    w1, w2, w10, w20 = calculate_w(transpose([all_means[0]]), transpose([all_means[1]]), sigma_sq, all_probabilities[0], all_probabilities[1])
+    w1, w10= calculate_w(transpose([all_means[0]]), sigma_sq, all_probabilities[0])
+    w2, w20= calculate_w(transpose([all_means[1]]), sigma_sq, all_probabilities[1])
 
     x_min, x_max, y_min, y_max = get_graph_boundary(all_datasets[0] + all_datasets[1])
 
