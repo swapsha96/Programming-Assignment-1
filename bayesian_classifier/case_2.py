@@ -68,16 +68,16 @@ def plot_dataset(dataset, color):
         y.append(row[1])
     plt.scatter(x, y, s= 2, marker ='o', c=color, alpha=1)
 
-def calculate_sigma_sq(cov):
-    avg_sigma = []
+def calculate_sigma_matrix(cov):
+    avg_sigma = [[0 for x in range(len(cov[0][0]))] for y in range(len(cov[0]))]
     for matrix in cov:
-        avg_sigma.append((matrix[0][0] + matrix[1][1]) / 2)
+        avg_sigma = add_matrices(avg_sigma, matrix)
+    return divide_matrix_by_x(avg_sigma, len(cov))
 
-    return (sum(avg_sigma) / len(avg_sigma))
-
-def calculate_w(mi, var, pi):
-    wi = divide_matrix_by_x(mi, var)
-    wi0 = math.log(pi) - (multiply_matrices(transpose(mi), mi)[0][0] / (2 * var))
+def calculate_w(mi, sigma, pi):
+    sigma_inverse = inverse(sigma)
+    wi = multiply_matrices(sigma_inverse, mi)
+    wi0 = math.log(pi) - divide_matrix_by_x(multiply_matrices(multiply_matrices(transpose(mi), sigma_inverse), mi), 2)[0][0]
 
     return wi, wi0
 
@@ -115,7 +115,7 @@ def gx(w1, w2, w10, w20, x):
     g1x = calculate_gix(w1, w10, x)
     g2x = calculate_gix(w2, w20, x)
     return (g1x - g2x)
-    
+
 def get_graph_boundary(dataset):
     param = [[0, 0], [0, 0]]
     for i, col in zip(range(len(dataset[0])), zip(*dataset)):
@@ -168,9 +168,9 @@ if __name__ == '__main__':
     
     all_datasets, all_training_sets, all_test_sets, all_means, all_covariance_matrices, all_probabilities = generate_summary_from_classes(names)
 
-    sigma_sq = calculate_sigma_sq(all_covariance_matrices)
-    w1, w10= calculate_w(transpose([all_means[0]]), sigma_sq, all_probabilities[0])
-    w2, w20= calculate_w(transpose([all_means[1]]), sigma_sq, all_probabilities[1])
+    sigma_matrix = calculate_sigma_matrix(all_covariance_matrices)
+    w1, w10= calculate_w(transpose([all_means[0]]), sigma_matrix, all_probabilities[0])
+    w2, w20= calculate_w(transpose([all_means[1]]), sigma_matrix, all_probabilities[1])
 
     x_min, x_max, y_min, y_max = get_graph_boundary(all_datasets[0] + all_datasets[1])
 
