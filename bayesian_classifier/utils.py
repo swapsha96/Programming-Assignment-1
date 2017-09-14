@@ -55,7 +55,7 @@ def plot_dataset(dataset, color):
         y.append(row[1])
     plt.scatter(x, y, s= 2, marker ='o', c=color, alpha=1)
 
-def generate_summary_from_classes(filenames):
+def generate_summary_from_classes(filenames, ratio, diagonal = False):
     all_datasets, all_training_sets, all_test_sets, all_means, all_covariance_matrices, all_probabilities = [], [], [], [], [], []
     sigma_sq = float(0)
     total_data_size = int(0)
@@ -71,7 +71,10 @@ def generate_summary_from_classes(filenames):
         means = mean(training_set)
         all_means.append(means)
 
-        covariance_matrix = calculate_covariance_matrix(training_set, means)
+        if diagonal == True:
+            covariance_matrix = calculate_diagonal_covariance_matrix(training_set, means)
+        else:
+            covariance_matrix = calculate_covariance_matrix(training_set, means)
         all_covariance_matrices.append(covariance_matrix)
 
         total_data_size += len(training_set)
@@ -92,10 +95,11 @@ def get_graph_boundary(dataset):
     x_max += 1
     y_min -= 1
     y_max += 1
-    return x_min, x_max, y_min, y_max
+    return [x_min, x_max, y_min, y_max]
 
-def plot_decision_boundary(W1, W2, w1, w2, w10, w20, x_min, x_max, y_min, y_max):
+def plot_decision_boundary(params, margin, gx_argmax):
     num_of_points = 500
+    x_min, x_max, y_min, y_max = tuple(margin)
     x_diff = (x_max - x_min) / num_of_points
     y_diff = (y_max - y_min) / num_of_points
 
@@ -106,26 +110,22 @@ def plot_decision_boundary(W1, W2, w1, w2, w10, w20, x_min, x_max, y_min, y_max)
         x_i = x_min + i * x_diff
         for j in range(num_of_points):
             y_i = y_min + j * y_diff
-
             x.append(x_i)
             y.append(y_i)
 
-    count = 0
-    cls1_x, cls1_y, cls2_x, cls2_y = [], [], [], []
+    cls_x, cls_y = [], []
+    for i in range(len(params)):
+        cls_x.append([])
+        cls_y.append([])
 
     for x_i, y_i in zip(x, y):
-        count += 1
-        x_matrix = [[x_i], [y_i]]
-        fx = gx(W1, W2, w1, w2, w10, w20, x_matrix)
-        if fx >= 0:
-            cls1_x.append(x_i)
-            cls1_y.append(y_i)
-        else:
-            cls2_x.append(x_i)
-            cls2_y.append(y_i)
+        gx = gx_argmax(params, [[x_i], [y_i]])
+        cls_x[gx].append(x_i)
+        cls_y[gx].append(y_i)
 
-    plt.scatter(cls1_x, cls1_y, s= 3, marker ='o', c='r', alpha=1)
-    plt.scatter(cls2_x, cls2_y, s= 3, marker ='o', c='b', alpha=1)
+    colors = ['r', 'b', 'g']
+    for i in range(len(params)):
+        plt.scatter(cls_x[i], cls_y[i], s= 3, marker ='o', c=colors[i], alpha=1)
 
 def calculate_covariance_matrix(data, means):
     cov = [[0, 0], [0, 0]]
@@ -139,40 +139,14 @@ def calculate_covariance_matrix(data, means):
     cov[1][0] = cov[0][1]
     return cov
 
-def calculate_w(mi, sigma, pi):
-    sigma_inverse = inverse(sigma)
-    Wi = divide_matrix_by_x(sigma_inverse, -2)
-    wi = multiply_matrices(sigma_inverse, mi)
-    wi0 = math.log(pi) - (math.log(abs(modulus(sigma))) / 2) - divide_matrix_by_x(multiply_matrices(multiply_matrices(transpose(mi), sigma_inverse), mi), 2)[0][0]
-
-    return Wi, wi, wi0
-
-def calculate_gix(Wi, wi, wi0, x):
-    return multiply_matrices(multiply_matrices(transpose(x), Wi), x)[0][0] + multiply_matrices(transpose(wi), x)[0][0] + wi0
-
-def gx(W1, W2, w1, w2, w10, w20, x):
-    g1x = calculate_gix(W1, w1, w10, x)
-    g2x = calculate_gix(W2, w2, w20, x)
-    return (g1x - g2x)
-
-
-if __name__ == '__main__':
-    ratio = 0.75
-    dirname = './LS_Group16/'
-    names = [dirname + 'Class1.txt', dirname + 'Class2.txt']
-    
-    all_datasets, all_training_sets, all_test_sets, all_means, all_covariance_matrices, all_probabilities = generate_summary_from_classes(names)
-
-    W1, w1, w10 = calculate_w(transpose([all_means[0]]), all_covariance_matrices[0], all_probabilities[0])
-    W2, w2, w20 = calculate_w(transpose([all_means[1]]), all_covariance_matrices[1], all_probabilities[1])
-
-    x_min, x_max, y_min, y_max = get_graph_boundary(all_datasets[0] + all_datasets[1])
-
-    plot_decision_boundary(W1, W2, w1, w2, w10, w20, x_min, x_max, y_min, y_max)
-
-    plot_dataset(all_training_sets[0] + all_training_sets[1], 'g')
-    plot_dataset(all_test_sets[0], 'k')
-    plot_dataset(all_test_sets[1], 'w')
-
-
-    plt.show()
+def calculate_diagonal_covariance_matrix(data, means):
+    cov = [[0, 0], [0, 0]]
+    for row in data:
+        cov[0][0] += ((row[0] - means[0]) ** 2)
+        cov[1][1] += ((row[1] - means[1]) ** 2)
+        # cov[0][1] += (row[0] - means[0]) * (row[1] - means[1])
+    cov[0][0] /= len(data)
+    cov[1][1] /= len(data)
+    # cov[0][1] /= len(data)
+    # cov[1][0] = cov[0][1]
+    return cov

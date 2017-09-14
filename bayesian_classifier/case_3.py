@@ -1,7 +1,6 @@
 import csv
 import math
 import matplotlib.pyplot as plt
-import numpy as np
 
 
 def load_dataset_from_file(filename):
@@ -19,18 +18,6 @@ def mean(data):
         sum_x += row[0]
         sum_y += row[1]
     return [float(sum_x/len(data)), float(sum_y/len(data))]
-
-def calculate_covariance_matrix(data, means):
-    cov = [[0, 0], [0, 0]]
-    for row in data:
-        cov[0][0] += ((row[0] - means[0]) ** 2)
-        cov[1][1] += ((row[1] - means[1]) ** 2)
-        # cov[0][1] += (row[0] - means[0]) * (row[1] - means[1])
-    cov[0][0] /= len(data)
-    cov[1][1] /= len(data)
-    # cov[0][1] /= len(data)
-    # cov[1][0] = cov[0][1]
-    return cov
 
 def modulus(matrix_2d):
     return (matrix_2d[0][0]*matrix_2d[1][1])-(matrix_2d[0][1]*matrix_2d[1][0])
@@ -68,14 +55,6 @@ def plot_dataset(dataset, color):
         y.append(row[1])
     plt.scatter(x, y, s= 2, marker ='o', c=color, alpha=1)
 
-def calculate_w(mi, sigma, pi):
-    sigma_inverse = inverse(sigma)
-    Wi = divide_matrix_by_x(sigma_inverse, -2)
-    wi = multiply_matrices(sigma_inverse, mi)
-    wi0 = math.log(pi) - (math.log(abs(modulus(sigma))) / 2) - divide_matrix_by_x(multiply_matrices(multiply_matrices(transpose(mi), sigma_inverse), mi), 2)[0][0]
-
-    return Wi, wi, wi0
-
 def generate_summary_from_classes(filenames):
     all_datasets, all_training_sets, all_test_sets, all_means, all_covariance_matrices, all_probabilities = [], [], [], [], [], []
     sigma_sq = float(0)
@@ -102,14 +81,6 @@ def generate_summary_from_classes(filenames):
         all_probabilities[i] /= total_data_size
 
     return all_datasets, all_training_sets, all_test_sets, all_means, all_covariance_matrices, all_probabilities
-
-def calculate_gix(Wi, wi, wi0, x):
-    return multiply_matrices(multiply_matrices(transpose(x), Wi), x)[0][0] + multiply_matrices(transpose(wi), x)[0][0] + wi0
-
-def gx(W1, W2, w1, w2, w10, w20, x):
-    g1x = calculate_gix(W1, w1, w10, x)
-    g2x = calculate_gix(W2, w2, w20, x)
-    return (g1x - g2x)
 
 def get_graph_boundary(dataset):
     param = [[0, 0], [0, 0]]
@@ -155,6 +126,35 @@ def plot_decision_boundary(W1, W2, w1, w2, w10, w20, x_min, x_max, y_min, y_max)
 
     plt.scatter(cls1_x, cls1_y, s= 3, marker ='o', c='r', alpha=1)
     plt.scatter(cls2_x, cls2_y, s= 3, marker ='o', c='b', alpha=1)
+
+def calculate_covariance_matrix(data, means):
+    cov = [[0, 0], [0, 0]]
+    for row in data:
+        cov[0][0] += ((row[0] - means[0]) ** 2)
+        cov[1][1] += ((row[1] - means[1]) ** 2)
+        # cov[0][1] += (row[0] - means[0]) * (row[1] - means[1])
+    cov[0][0] /= len(data)
+    cov[1][1] /= len(data)
+    # cov[0][1] /= len(data)
+    # cov[1][0] = cov[0][1]
+    return cov
+
+def calculate_w(mi, sigma, pi):
+    sigma_inverse = inverse(sigma)
+    Wi = divide_matrix_by_x(sigma_inverse, -2)
+    wi = multiply_matrices(sigma_inverse, mi)
+    wi0 = math.log(pi) - (math.log(abs(modulus(sigma))) / 2) - divide_matrix_by_x(multiply_matrices(multiply_matrices(transpose(mi), sigma_inverse), mi), 2)[0][0]
+
+    return Wi, wi, wi0
+
+def calculate_gix(Wi, wi, wi0, x):
+    return multiply_matrices(multiply_matrices(transpose(x), Wi), x)[0][0] + multiply_matrices(transpose(wi), x)[0][0] + wi0
+
+def gx(W1, W2, w1, w2, w10, w20, x):
+    g1x = calculate_gix(W1, w1, w10, x)
+    g2x = calculate_gix(W2, w2, w20, x)
+    return (g1x - g2x)
+
 
 if __name__ == '__main__':
     ratio = 0.75
