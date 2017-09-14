@@ -25,11 +25,11 @@ def calculate_covariance_matrix(data, means):
     for row in data:
         cov[0][0] += ((row[0] - means[0]) ** 2)
         cov[1][1] += ((row[1] - means[1]) ** 2)
-        cov[0][1] += (row[0] - means[0]) * (row[1] - means[1])
+        # cov[0][1] += (row[0] - means[0]) * (row[1] - means[1])
     cov[0][0] /= len(data)
     cov[1][1] /= len(data)
-    cov[0][1] /= len(data)
-    cov[1][0] = cov[0][1]
+    # cov[0][1] /= len(data)
+    # cov[1][0] = cov[0][1]
     return cov
 
 def modulus(matrix_2d):
@@ -68,18 +68,13 @@ def plot_dataset(dataset, color):
         y.append(row[1])
     plt.scatter(x, y, s= 2, marker ='o', c=color, alpha=1)
 
-def calculate_sigma_matrix(cov):
-    avg_sigma = [[0 for x in range(len(cov[0][0]))] for y in range(len(cov[0]))]
-    for matrix in cov:
-        avg_sigma = add_matrices(avg_sigma, matrix)
-    return divide_matrix_by_x(avg_sigma, len(cov))
-
 def calculate_w(mi, sigma, pi):
     sigma_inverse = inverse(sigma)
+    Wi = divide_matrix_by_x(sigma_inverse, -2)
     wi = multiply_matrices(sigma_inverse, mi)
-    wi0 = math.log(pi) - divide_matrix_by_x(multiply_matrices(multiply_matrices(transpose(mi), sigma_inverse), mi), 2)[0][0]
+    wi0 = math.log(pi) - (math.log(abs(modulus(sigma))) / 2) - divide_matrix_by_x(multiply_matrices(multiply_matrices(transpose(mi), sigma_inverse), mi), 2)[0][0]
 
-    return wi, wi0
+    return Wi, wi, wi0
 
 def generate_summary_from_classes(filenames):
     all_datasets, all_training_sets, all_test_sets, all_means, all_covariance_matrices, all_probabilities = [], [], [], [], [], []
@@ -108,12 +103,12 @@ def generate_summary_from_classes(filenames):
 
     return all_datasets, all_training_sets, all_test_sets, all_means, all_covariance_matrices, all_probabilities
 
-def calculate_gix(wi, wi0, x):
-    return multiply_matrices(transpose(wi), x)[0][0] + wi0
+def calculate_gix(Wi, wi, wi0, x):
+    return multiply_matrices(multiply_matrices(transpose(x), Wi), x)[0][0] + multiply_matrices(transpose(wi), x)[0][0] + wi0
 
-def gx(w1, w2, w10, w20, x):
-    g1x = calculate_gix(w1, w10, x)
-    g2x = calculate_gix(w2, w20, x)
+def gx(W1, W2, w1, w2, w10, w20, x):
+    g1x = calculate_gix(W1, w1, w10, x)
+    g2x = calculate_gix(W2, w2, w20, x)
     return (g1x - g2x)
 
 def get_graph_boundary(dataset):
@@ -128,7 +123,7 @@ def get_graph_boundary(dataset):
     y_max += 1
     return x_min, x_max, y_min, y_max
 
-def plot_decision_boundary(w1, w2, w10, w20, x_min, x_max, y_min, y_max):
+def plot_decision_boundary(W1, W2, w1, w2, w10, w20, x_min, x_max, y_min, y_max):
     num_of_points = 500
     x_diff = (x_max - x_min) / num_of_points
     y_diff = (y_max - y_min) / num_of_points
@@ -150,7 +145,7 @@ def plot_decision_boundary(w1, w2, w10, w20, x_min, x_max, y_min, y_max):
     for x_i, y_i in zip(x, y):
         count += 1
         x_matrix = [[x_i], [y_i]]
-        fx = gx(w1, w2, w10, w20, x_matrix)
+        fx = gx(W1, W2, w1, w2, w10, w20, x_matrix)
         if fx >= 0:
             cls1_x.append(x_i)
             cls1_y.append(y_i)
@@ -168,13 +163,12 @@ if __name__ == '__main__':
     
     all_datasets, all_training_sets, all_test_sets, all_means, all_covariance_matrices, all_probabilities = generate_summary_from_classes(names)
 
-    sigma_matrix = calculate_sigma_matrix(all_covariance_matrices)
-    w1, w10= calculate_w(transpose([all_means[0]]), sigma_matrix, all_probabilities[0])
-    w2, w20= calculate_w(transpose([all_means[1]]), sigma_matrix, all_probabilities[1])
+    W1, w1, w10 = calculate_w(transpose([all_means[0]]), all_covariance_matrices[0], all_probabilities[0])
+    W2, w2, w20 = calculate_w(transpose([all_means[1]]), all_covariance_matrices[1], all_probabilities[1])
 
     x_min, x_max, y_min, y_max = get_graph_boundary(all_datasets[0] + all_datasets[1])
 
-    plot_decision_boundary(w1, w2, w10, w20, x_min, x_max, y_min, y_max)
+    plot_decision_boundary(W1, W2, w1, w2, w10, w20, x_min, x_max, y_min, y_max)
 
     plot_dataset(all_training_sets[0] + all_training_sets[1], 'g')
     plot_dataset(all_test_sets[0], 'k')

@@ -128,7 +128,7 @@ def get_graph_boundary(dataset):
     y_max += 1
     return x_min, x_max, y_min, y_max
 
-def plot_decision_boundary(x_min, x_max, y_min, y_max):
+def plot_decision_boundary(w1, w2, w10, w20, x_min, x_max, y_min, y_max):
     num_of_points = 500
     x_diff = (x_max - x_min) / num_of_points
     y_diff = (y_max - y_min) / num_of_points
@@ -174,7 +174,7 @@ if __name__ == '__main__':
 
     x_min, x_max, y_min, y_max = get_graph_boundary(all_datasets[0] + all_datasets[1])
 
-    plot_decision_boundary(x_min, x_max, y_min, y_max)
+    plot_decision_boundary(w1, w2, w10, w20, x_min, x_max, y_min, y_max)
 
     plot_dataset(all_training_sets[0] + all_training_sets[1], 'g')
     plot_dataset(all_test_sets[0], 'k')
