@@ -48,12 +48,10 @@ def divide_matrix_by_x(m, x):
             matrix[i][j] = m[i][j]/x
     return matrix
 
-def plot_dataset(dataset, color):
-    x, y = [], []
-    for row in dataset:
-        x.append(row[0])
-        y.append(row[1])
-    plt.scatter(x, y, s= 2, marker ='o', c=color, alpha=1)
+def plot_dataset(datasets):
+    colors = ['c', 'm', 'k', 'w']
+    for i, dataset in zip(range(len(datasets)), datasets):
+            plt.scatter(transpose(dataset)[0], transpose(dataset)[1], s = 2, marker ='o', c=colors[i], alpha=1)
 
 def generate_summary_from_classes(filenames, ratio, diagonal = False):
     all_datasets, all_training_sets, all_test_sets, all_means, all_covariance_matrices, all_probabilities = [], [], [], [], [], []
@@ -69,12 +67,9 @@ def generate_summary_from_classes(filenames, ratio, diagonal = False):
         all_test_sets.append(test_set)
 
         means = mean(training_set)
-        all_means.append(means)
+        all_means.append(transpose([means]))
 
-        if diagonal == True:
-            covariance_matrix = calculate_diagonal_covariance_matrix(training_set, means)
-        else:
-            covariance_matrix = calculate_covariance_matrix(training_set, means)
+        covariance_matrix = calculate_covariance_matrix(training_set, means, diagonal)
         all_covariance_matrices.append(covariance_matrix)
 
         total_data_size += len(training_set)
@@ -91,13 +86,19 @@ def get_graph_boundary(dataset):
         param[i][0], param[i][1] = min(col), max(col)
 
     x_min, x_max, y_min, y_max = param[0][0], param[0][1], param[1][0], param[1][1]
-    x_min -= 1
-    x_max += 1
-    y_min -= 1
-    y_max += 1
+    x_min -= 5
+    x_max += 5
+    y_min -= 5
+    y_max += 5
     return [x_min, x_max, y_min, y_max]
 
-def plot_decision_boundary(params, margin, gx_argmax):
+def gx_argmax(calculate_gix, params, x):
+    gix = []
+    for param in params:
+        gix.append(calculate_gix(param, x))
+    return gix.index(max(gix))
+
+def plot_decision_boundary(calculate_gix, params, margin):
     num_of_points = 500
     x_min, x_max, y_min, y_max = tuple(margin)
     x_diff = (x_max - x_min) / num_of_points
@@ -119,34 +120,73 @@ def plot_decision_boundary(params, margin, gx_argmax):
         cls_y.append([])
 
     for x_i, y_i in zip(x, y):
-        gx = gx_argmax(params, [[x_i], [y_i]])
+        gx = gx_argmax(calculate_gix, params, [[x_i], [y_i]])
         cls_x[gx].append(x_i)
         cls_y[gx].append(y_i)
 
-    colors = ['r', 'b', 'g']
+    colors = ['r', 'b', 'g', 'y']
     for i in range(len(params)):
         plt.scatter(cls_x[i], cls_y[i], s= 3, marker ='o', c=colors[i], alpha=1)
 
-def calculate_covariance_matrix(data, means):
+def calculate_covariance_matrix(data, means, diagonal = False):
     cov = [[0, 0], [0, 0]]
     for row in data:
         cov[0][0] += ((row[0] - means[0]) ** 2)
         cov[1][1] += ((row[1] - means[1]) ** 2)
-        cov[0][1] += (row[0] - means[0]) * (row[1] - means[1])
+        if diagonal == False:
+            cov[0][1] += (row[0] - means[0]) * (row[1] - means[1])
     cov[0][0] /= len(data)
     cov[1][1] /= len(data)
-    cov[0][1] /= len(data)
-    cov[1][0] = cov[0][1]
+    if diagonal == False:
+        cov[0][1] /= len(data)
+        cov[1][0] = cov[0][1]
     return cov
 
-def calculate_diagonal_covariance_matrix(data, means):
-    cov = [[0, 0], [0, 0]]
-    for row in data:
-        cov[0][0] += ((row[0] - means[0]) ** 2)
-        cov[1][1] += ((row[1] - means[1]) ** 2)
-        # cov[0][1] += (row[0] - means[0]) * (row[1] - means[1])
-    cov[0][0] /= len(data)
-    cov[1][1] /= len(data)
-    # cov[0][1] /= len(data)
-    # cov[1][0] = cov[0][1]
-    return cov
+def generate_confusion_matrix(calculate_gix, params, datasets):
+    matrix = [[0 for x in range(len(datasets))] for y in range(len(datasets))]
+    for i, dataset in zip(range(len(datasets)), datasets):
+        for x, y in zip(transpose(dataset)[0], transpose(dataset)[1]):
+            gx = gx_argmax(calculate_gix, params, [[x], [y]])
+            matrix[i][gx] += 1
+    return matrix
+
+def get_accuracy(confusion_matrix):
+    num, denom = 0, 0
+    for diagonal_index in range(len(confusion_matrix)):
+        num += confusion_matrix[diagonal_index][diagonal_index]
+
+    for i in range(len(confusion_matrix)):
+        for j in range(len(confusion_matrix)):
+            denom += confusion_matrix[i][j]
+
+    return (num / denom)
+
+def get_precision(confusion_matrix):
+    precision = []
+    for i, row in zip(range(len(confusion_matrix)), confusion_matrix):
+        precision.append(confusion_matrix[i][i] / sum(row))
+    return precision
+
+def get_mean_precision(confusion_matrix):
+    precision = get_precision(confusion_matrix)
+    return (sum(precision) / len(precision))
+
+def get_recall(confusion_matrix):
+    recall = []
+    for i, row in zip(range(len(confusion_matrix)), transpose(confusion_matrix)):
+        recall.append(confusion_matrix[i][i] / sum(row))
+    return recall
+
+def get_mean_recall(confusion_matrix):
+    recall = get_recall(confusion_matrix)
+    return (sum(recall) / len(recall))
+
+def get_f_measure(precision, recall):
+    measure = []
+    for p, r in zip(precision, recall):
+        measure.append((2 * p * r) / (p + r))
+    return measure
+
+def get_mean_f_measure(precision, recall):
+    f_measure = get_f_measure(precision, recall)
+    return (sum(f_measure) / len(f_measure))
