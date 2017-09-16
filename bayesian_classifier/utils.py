@@ -105,6 +105,12 @@ def gx_argmax(calculate_gix, params, x):
         gix.append(calculate_gix(param, x))
     return gix.index(max(gix))
 
+def gx_max(calculate_gix, params, x):
+    gix = []
+    for param in params:
+        gix.append(calculate_gix(param, x))
+    return max(gix)
+
 def plot_decision_boundary(calculate_gix, params, margin):
     num_of_points = 1000
     x_min, x_max, y_min, y_max = tuple(margin)
@@ -142,27 +148,22 @@ def plot_decision_boundary(calculate_gix, params, margin):
         plt.scatter(cls_x[i], cls_y[i], s= 3, marker ='o', color=colors[i], alpha=1)
     ax.legend()
 
-def plot_contour_graph(names, datasets, calculate_gix, params, margin):
-    colors = ['crimson', 'darkblue', 'darkgreen', 'orange']
-    for i, dataset in zip(range(len(datasets)), datasets):
-        plt.scatter(transpose(dataset)[0], transpose(dataset)[1], s = 2, marker ='o', color=colors[i], alpha=1, label=names[i])
-
-    num_of_points = 1000
+def plot_contour_graph(calculate_gix, params, margin):
     x_min, x_max, y_min, y_max = tuple(margin)
 
     X = []
     Y = []
 
-    for i in range(x_min, x_max):
-        for j in range(y_min, y_max):
-            X.append(i)
-            Y.append(j)
+    for i in range(int(x_min), int(x_max+100)):
+        X.append(i)
+    for j in range(int(y_min), int(y_max+100)):
+        Y.append(j)
 
-    z = [[0 for x in range(len(X))] for y in range(len(Y))]
-
-    for i in X:
-        for j in Y:
-            gx = gx_argmax(calculate_gix, params, [[i], [j]])
+    Z = [[0 for y in range(len(Y))] for x in range(len(X))]
+    print(X)
+    for i, x in zip(range(len(X)), X):
+        for j, y in zip(range(len(Y)), Y):
+            gx = gx_max(calculate_gix, params, [[x], [y]])
             Z[i][j] = gx
 
     fig = plt.figure()
@@ -170,7 +171,9 @@ def plot_contour_graph(names, datasets, calculate_gix, params, margin):
     ax = fig.add_subplot(111)
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
-    plt.contour(X, Y, Z)
+
+    cp = plt.contourf(Y, X, Z)
+    plt.colorbar(cp)
     ax.legend()
 
 def calculate_covariance_matrix(data, means, diagonal = False):

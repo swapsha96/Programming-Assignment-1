@@ -68,8 +68,15 @@ if __name__ == '__main__':
     print("Mean F-measure: " + str(get_mean_f_measure(get_precision(confusion_matrix), get_recall(confusion_matrix)) * 100) + "%")
     
     print("Building and saving graph.")
+    plt.figure(1)
     plot_decision_boundary(calculate_gix, params, margin)
     plot_dataset(class_names, all_training_sets)
     plt.legend(loc='upper right')
-    plt.savefig(dirname + "Case3 " + (" vs ".join(class_names)) + ".png", format='png')
+    plt.savefig(dirname + "Case1 " + (" vs ".join(class_names)) + ".png", format='png')
+    
+    plt.figure(2)
+    plot_contour_graph(calculate_gix, params, margin)
+    plot_dataset(class_names, all_training_sets)
+    plt.legend(loc='upper right')
+    plt.savefig(dirname + "Case1 " + (" vs ".join(class_names)) + " contour.png", format='png')
     print("Done.")

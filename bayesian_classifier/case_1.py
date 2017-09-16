@@ -81,7 +81,8 @@ if __name__ == '__main__':
     plt.savefig(dirname + "Case1 " + (" vs ".join(class_names)) + ".png", format='png')
     
     plt.figure(2)
-    plot_contour_graph(class_names, all_training_sets, calculate_gix, params, margin)
+    plot_contour_graph(calculate_gix, params, margin)
+    plot_dataset(class_names, all_training_sets)
     plt.legend(loc='upper right')
     plt.savefig(dirname + "Case1 " + (" vs ".join(class_names)) + " contour.png", format='png')
     print("Done.")
