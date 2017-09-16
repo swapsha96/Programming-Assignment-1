@@ -49,9 +49,9 @@ def divide_matrix_by_x(m, x):
     return matrix
 
 def plot_dataset(datasets):
-    colors = ['c', 'm', 'k', 'w']
+    colors = ['crimson', 'darkblue', 'darkgreen', 'orange']
     for i, dataset in zip(range(len(datasets)), datasets):
-            plt.scatter(transpose(dataset)[0], transpose(dataset)[1], s = 2, marker ='o', c=colors[i], alpha=1)
+            plt.scatter(transpose(dataset)[0], transpose(dataset)[1], s = 2, marker ='o', color=colors[i+1], alpha=1)
 
 def generate_summary_from_classes(filenames, ratio, diagonal = False):
     all_datasets, all_training_sets, all_test_sets, all_means, all_covariance_matrices, all_probabilities = [], [], [], [], [], []
@@ -99,7 +99,7 @@ def gx_argmax(calculate_gix, params, x):
     return gix.index(max(gix))
 
 def plot_decision_boundary(calculate_gix, params, margin):
-    num_of_points = 500
+    num_of_points = 1000
     x_min, x_max, y_min, y_max = tuple(margin)
     x_diff = (x_max - x_min) / num_of_points
     y_diff = (y_max - y_min) / num_of_points
@@ -124,9 +124,9 @@ def plot_decision_boundary(calculate_gix, params, margin):
         cls_x[gx].append(x_i)
         cls_y[gx].append(y_i)
 
-    colors = ['r', 'b', 'g', 'y']
+    colors = ['coral', 'lightblue', 'lightgreen', 'khaki']
     for i in range(len(params)):
-        plt.scatter(cls_x[i], cls_y[i], s= 3, marker ='o', c=colors[i], alpha=1)
+        plt.scatter(cls_x[i], cls_y[i], s= 3, marker ='o', color=colors[i+1], alpha=1)
 
 def calculate_covariance_matrix(data, means, diagonal = False):
     cov = [[0, 0], [0, 0]]
@@ -173,20 +173,32 @@ def get_mean_precision(confusion_matrix):
 
 def get_recall(confusion_matrix):
     recall = []
-    for i, row in zip(range(len(confusion_matrix)), transpose(confusion_matrix)):
-        recall.append(confusion_matrix[i][i] / sum(row))
+    for i, row in zip(range(len(confusion_matrix)), transpose(confusion_matrix)):       
+        try:
+            recall.append(confusion_matrix[i][i] / sum(row))
+        except (ZeroDivisionError, TypeError):
+            recall.append('-')
     return recall
 
 def get_mean_recall(confusion_matrix):
     recall = get_recall(confusion_matrix)
-    return (sum(recall) / len(recall))
+    try:
+        return (sum(recall) / len(recall))
+    except (ZeroDivisionError, TypeError):
+        return '-'
 
 def get_f_measure(precision, recall):
     measure = []
     for p, r in zip(precision, recall):
-        measure.append((2 * p * r) / (p + r))
+        try:
+            measure.append((2 * p * r) / (p + r))
+        except (ZeroDivisionError, TypeError):
+            measure.append('-')
     return measure
 
 def get_mean_f_measure(precision, recall):
     f_measure = get_f_measure(precision, recall)
-    return (sum(f_measure) / len(f_measure))
+    try:
+        return (sum(f_measure) / len(f_measure))
+    except (ZeroDivisionError, TypeError):
+        return '-'

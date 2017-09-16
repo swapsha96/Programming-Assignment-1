@@ -34,14 +34,14 @@ if __name__ == '__main__':
         complete_dataset += dataset
     margin = get_graph_boundary(complete_dataset)
 
-    # confusion_matrix = generate_confusion_matrix(calculate_gix, params, all_test_sets)
-    # print("Classification accuracy: " + str(get_accuracy(confusion_matrix)))
-    # print("Precision for every class: " + str(get_precision(confusion_matrix)))
-    # print("Mean precision: " + str(get_mean_precision(confusion_matrix)))
-    # print("Recall for every class: " + str(get_recall(confusion_matrix)))
-    # print("Mean precall: " + str(get_mean_recall(confusion_matrix)))
-    # print("F-measure for every class: " + str(get_f_measure(get_precision(confusion_matrix), get_recall(confusion_matrix))))
-    # print("Mean F-measure: " + str(get_mean_f_measure(get_precision(confusion_matrix), get_recall(confusion_matrix))))
+    confusion_matrix = generate_confusion_matrix(calculate_gix, params, all_test_sets)
+    print("Classification accuracy: " + str(get_accuracy(confusion_matrix)))
+    print("Precision for every class: " + str(get_precision(confusion_matrix)))
+    print("Mean precision: " + str(get_mean_precision(confusion_matrix)))
+    print("Recall for every class: " + str(get_recall(confusion_matrix)))
+    print("Mean precall: " + str(get_mean_recall(confusion_matrix)))
+    print("F-measure for every class: " + str(get_f_measure(get_precision(confusion_matrix), get_recall(confusion_matrix))))
+    print("Mean F-measure: " + str(get_mean_f_measure(get_precision(confusion_matrix), get_recall(confusion_matrix))))
     plot_decision_boundary(calculate_gix, params, margin)
     plot_dataset(all_training_sets)
     
