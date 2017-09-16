@@ -1,6 +1,10 @@
-import csv
+import sys, csv
 import math
+import warnings
 import matplotlib.pyplot as plt
+
+
+warnings.filterwarnings("ignore", module="matplotlib")
 
 
 def load_dataset_from_file(filename):
@@ -48,10 +52,10 @@ def divide_matrix_by_x(m, x):
             matrix[i][j] = m[i][j]/x
     return matrix
 
-def plot_dataset(datasets):
+def plot_dataset(names, datasets):
     colors = ['crimson', 'darkblue', 'darkgreen', 'orange']
     for i, dataset in zip(range(len(datasets)), datasets):
-            plt.scatter(transpose(dataset)[0], transpose(dataset)[1], s = 2, marker ='o', color=colors[i+1], alpha=1)
+        plt.scatter(transpose(dataset)[0], transpose(dataset)[1], s = 2, marker ='o', color=colors[i], alpha=1, label=names[i])
 
 def generate_summary_from_classes(filenames, ratio, diagonal = False):
     all_datasets, all_training_sets, all_test_sets, all_means, all_covariance_matrices, all_probabilities = [], [], [], [], [], []
@@ -79,6 +83,9 @@ def generate_summary_from_classes(filenames, ratio, diagonal = False):
         all_probabilities[i] /= total_data_size
 
     return all_datasets, all_training_sets, all_test_sets, all_means, all_covariance_matrices, all_probabilities
+
+def print_matrix(matrix):
+    print('\n'.join([''.join(['{:4}'.format(item) for item in row]) for row in matrix]))
 
 def get_graph_boundary(dataset):
     param = [[0, 0], [0, 0]]
@@ -124,9 +131,47 @@ def plot_decision_boundary(calculate_gix, params, margin):
         cls_x[gx].append(x_i)
         cls_y[gx].append(y_i)
 
+    fig = plt.figure()
+    fig.suptitle('Decision Region Plot', fontsize=14, fontweight='bold')
+    ax = fig.add_subplot(111)
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+
     colors = ['coral', 'lightblue', 'lightgreen', 'khaki']
     for i in range(len(params)):
-        plt.scatter(cls_x[i], cls_y[i], s= 3, marker ='o', color=colors[i+1], alpha=1)
+        plt.scatter(cls_x[i], cls_y[i], s= 3, marker ='o', color=colors[i], alpha=1)
+    ax.legend()
+
+def plot_contour_graph(names, datasets, calculate_gix, params, margin):
+    colors = ['crimson', 'darkblue', 'darkgreen', 'orange']
+    for i, dataset in zip(range(len(datasets)), datasets):
+        plt.scatter(transpose(dataset)[0], transpose(dataset)[1], s = 2, marker ='o', color=colors[i], alpha=1, label=names[i])
+
+    num_of_points = 1000
+    x_min, x_max, y_min, y_max = tuple(margin)
+
+    X = []
+    Y = []
+
+    for i in range(x_min, x_max):
+        for j in range(y_min, y_max):
+            X.append(i)
+            Y.append(j)
+
+    z = [[0 for x in range(len(X))] for y in range(len(Y))]
+
+    for i in X:
+        for j in Y:
+            gx = gx_argmax(calculate_gix, params, [[i], [j]])
+            Z[i][j] = gx
+
+    fig = plt.figure()
+    fig.suptitle('Contour Graph', fontsize=14, fontweight='bold')
+    ax = fig.add_subplot(111)
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    plt.contour(X, Y, Z)
+    ax.legend()
 
 def calculate_covariance_matrix(data, means, diagonal = False):
     cov = [[0, 0], [0, 0]]
