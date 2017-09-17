@@ -8,8 +8,11 @@ warnings.filterwarnings("ignore", module="matplotlib")
 
 
 def load_dataset_from_file(filename):
-    dataset = list(csv.reader(open(filename, 'r'), delimiter = ' '))
-    dataset = [[float(x) for x in row] for row in dataset]
+    dataset = []
+    with open(filename, 'r') as file:
+        datapoints = [line.split() for line in file]
+        for entry in datapoints:
+            dataset.append([float(x) for x in entry])
     return dataset
 
 def split_dataset(dataset, ratio):
