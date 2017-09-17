@@ -31,6 +31,8 @@ if __name__ == '__main__':
         for i in range(2, len(sys.argv)):
             class_names.append(sys.argv[i])
             class_addresses.append(dirname + sys.argv[i])
+
+    print("Case 3: " + (" vs ".join(class_names)))
     
     all_datasets, all_training_sets, all_test_sets, all_means, all_covariance_matrices, all_probabilities = generate_summary_from_classes(class_addresses, ratio, diagonal = True)
 
@@ -67,6 +69,7 @@ if __name__ == '__main__':
         print("\t" + name + ": " + str(f * 100) + "%")
     print("Mean F-measure: " + str(get_mean_f_measure(get_precision(confusion_matrix), get_recall(confusion_matrix)) * 100) + "%")
     
+    print("Generating and plotting graphs.")
     plt.figure(1)
     plot_decision_boundary(calculate_gix, params, margin)
     plot_dataset(class_names, all_training_sets)
