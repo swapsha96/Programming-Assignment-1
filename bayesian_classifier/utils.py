@@ -154,25 +154,29 @@ def plot_contour_graph(calculate_gix, params, margin):
     X = []
     Y = []
 
-    for i in range(int(x_min), int(x_max+100)):
+    for i in range(int(x_min), int(x_max)):
         X.append(i)
-    for j in range(int(y_min), int(y_max+100)):
+    for j in range(int(y_min), int(y_max)):
         Y.append(j)
 
-    Z = [[0 for y in range(len(Y))] for x in range(len(X))]
-    print(X)
-    for i, x in zip(range(len(X)), X):
-        for j, y in zip(range(len(Y)), Y):
+    Z = []
+    for i in range(len(Y)):
+        Z.append([])
+        for j in range(len(X)):
+            Z[i].append(0)
+
+    for i, x in zip(range(len(Y)), Y):
+        for j, y in zip(range(len(X)), X):
             gx = gx_max(calculate_gix, params, [[x], [y]])
             Z[i][j] = gx
-
+    
     fig = plt.figure()
-    fig.suptitle('Contour Graph', fontsize=14, fontweight='bold')
     ax = fig.add_subplot(111)
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
+    fig.suptitle('Contour Graph', fontsize=14, fontweight='bold')
 
-    cp = plt.contourf(Y, X, Z)
+    cp = plt.contourf(X, Y, Z)
     plt.colorbar(cp)
     ax.legend()
 
